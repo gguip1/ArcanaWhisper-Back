@@ -1,6 +1,5 @@
 import os
 import streamlit as st
-# from streamlit_image_select import image_select
 from random import shuffle
 
 st.set_page_config(layout='wide') # Wide 모드 설정
@@ -28,8 +27,19 @@ for row in rows:
     for i, img_path in enumerate(row):
         with cols[i]:
             st.image(img_path, use_column_width=True)
-'''
+
+st.write("Comment")
+"""
     현재는 카드 이미지가 보이고 있지만 카드 뒷면이 보이도록 수정 예정
     타로 진행 중 session으로 imgs_paths 저장 필요
     타로 진행이 종료되거나 중간에 취소시 session 초기화
-'''
+"""
+
+## -- streamlit_image_select
+
+# from streamlit_image_select import image_select
+
+# img = image_select(
+#     label="",
+#     images=imgs_paths,
+# )
