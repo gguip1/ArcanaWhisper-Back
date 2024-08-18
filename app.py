@@ -109,7 +109,8 @@ if st.button('운명 확인하기'):
     with st.spinner('운명 확인중...'):
         # st.session_state에 selected_card가 있는지 확인 필요
         if 'selected_card' in st.session_state:
-            response = tarot_with_llm.ollama_response('오늘의 운세', st.session_state.selected_card)
+            # response = tarot_with_llm.ollama_response('오늘의 운세', st.session_state.selected_card) # 자체 ollama 서버
+            response = tarot_with_llm.sonnet_respone('오늘의 운세', st.session_state.selected_card) # 클라우드
             st.write(response)
         else:
             st.write("카드를 선택하지 않았습니다.")
