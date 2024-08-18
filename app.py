@@ -1,6 +1,7 @@
-import os
 import streamlit as st
-from streamlit_image_select import image_select
+from st_clickable_images import clickable_images
+
+import os
 from random import shuffle
 
 # 페이지 설정
@@ -10,71 +11,105 @@ st.set_page_config(
     layout='wide',
 )
 
-# 페이지 제목 설정
-st.title('타로 서비스(가제)')
+# CSS
+st.markdown("""
+    <style>
+        div > img{
+            border-radius: 6px
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-# 타로 이미지 리소스 경로 설정
-imgs_path = 'resource/images/tarot_/'
-tarot_back_img_path = 'resource/images/tarot_back/tarot_back.jpg'
-
-# 타로 이미지 파일 목록 가져오기
+imgs_path = os.getcwd() +  '/resource/images/tarot_/'
 imgs_list = os.listdir(imgs_path)
 
-# 타로 카드 뒷면 이미지 생성
-tarot_back_imgs = [tarot_back_img_path] * len(imgs_list)
+#중복 체크
+def dup_check(list, checking_value):
+    for content in list:
+        if checking_value == content:
+            return True
+    return False
 
-# 세션 초기화 및 관리
-if "selected_imgs" not in st.session_state:
-    st.session_state.selected_imgs = []
-
-if "imgs" not in st.session_state:
-    st.session_state.imgs = []
+if "card" not in st.session_state:
     shuffle(imgs_list)
-    st.session_state.imgs = [os.path.join(imgs_path, img) for img in imgs_list]
+    st.session_state.card = imgs_list
 
-if "run_button" not in st.session_state:
-    st.session_state.run_button = True
-if "run_button_clicked" not in st.session_state:
-    st.session_state.run_button_clicked = False
+if "selected_card" not in st.session_state:
+    st.session_state.selected_card = []
 
-# 이미지 선택 영역
+print(st.session_state.card)
+print(imgs_list)
+
+st.title('타로')
+
 with st.container(border=True):
-    selected_img_index = image_select(
-        label="",
-        images=tarot_back_imgs,
-        return_value="index",
-        use_container_width=False,
+    st.markdown('<h3 class="center-title">카드를 선택해주세요.</h3>', unsafe_allow_html=True)
+    clicked = clickable_images(
+        [
+            "https://i.pinimg.com/564x/c0/77/76/c0777662cc623d7203c995e10c213090.jpg"
+        ] * len(imgs_list),
+        # titles=[f"Image #{str(i)}" for i in range(22)],
+        div_style={
+            "display": "flex",
+            "flex-wrap": "nowrap",
+            # "overflow-x": "auto",  # 가로로 스크롤 가능하게 설정
+            "justify-content": "center",
+            "align-items": "center",
+            "padding": "20px",
+            "width": "100%",
+            "position": "relative"
+        },
+        img_style={
+            # "margin-right": "-80px",  # 이미지 간 겹침 정도 조절
+            "height": "200px",
+            # "z-index": "1",
+            "position": "relative",
+            "box-shadow": "0px 4px 6px rgba(0, 0, 0, 0.1)",
+            "transition": "transform 0.2s",  # 호버 시 애니메이션 추가
+        },
     )
 
-# 선택한 이미지 추가
-session_imgs = st.session_state.imgs
-session_selected_imgs = st.session_state.selected_imgs
+# st.markdown(f"Image #{clicked} clicked" if clicked > -1 else "No image clicked")
+if clicked != -1 and len(st.session_state.selected_card) < 3:
+    if not dup_check(st.session_state.selected_card, st.session_state.card[clicked]):
+        st.session_state.selected_card.append(st.session_state.card[clicked])
+    else:
+        st.toast('중복 카드입니다.')
 
-if selected_img_index is not None:  # 이미지 선택 시에만 추가
-    session_selected_imgs.append(session_imgs[selected_img_index])
+if len(st.session_state.selected_card) == 3:
+    st.toast('더이상 선택할 수 없습니다.')
 
-# 선택된 이미지 표시 영역
-selected_imgs_cols = st.columns(6)
-for idx, img_path in enumerate(session_selected_imgs[1:4], start=0):  # 선택된 이미지 3장 표시
-    with selected_imgs_cols[idx * 2]:  # 1열씩 띄워서 표시
-        with st.container(border=True):
-            st.image(img_path, use_column_width=True)
-
-# 버튼 클릭 핸들러
-def run_button_clicked():
-    st.session_state.run_button = True
-    with st.spinner('확인하는 중...'):
-        st.write(session_selected_imgs[1:4])
+if st.session_state.selected_card:
+    imgs_cols = st.columns(3)
     
+    # 첫 번째 카드가 있는지 확인하고 이미지 출력
+    if len(st.session_state.selected_card) > 0:
+        with imgs_cols[0]:
+            with st.container(border=True):
+                st.markdown('<h3 class="center-title">첫번째 카드</h3>', unsafe_allow_html=True)
+                st.image(imgs_path + st.session_state.selected_card[0], use_column_width=True)
+    
+    # 두 번째 카드가 있는지 확인하고 이미지 출력
+    if len(st.session_state.selected_card) > 1:
+        with imgs_cols[1]:
+            with st.container(border=True):
+                st.markdown('<h3 class="center-title">두번째 카드</h3>', unsafe_allow_html=True)
+                st.image(imgs_path + st.session_state.selected_card[1], use_column_width=True)
+    
+    # 세 번째 카드가 있는지 확인하고 이미지 출력
+    if len(st.session_state.selected_card) > 2:
+        with imgs_cols[2]:
+            with st.container(border=True):
+                st.markdown('<h3 class="center-title">세번째 카드</h3>', unsafe_allow_html=True)
+                st.image(imgs_path + st.session_state.selected_card[2], use_column_width=True)
 
-# 선택된 이미지가 4장일 경우 버튼 활성화
-if len(session_selected_imgs) == 4:
-    st.session_state.run_button = False
+import tarot_with_llm
 
-# 운명 확인하기 버튼
-st.button('운명 확인하기', on_click=run_button_clicked, disabled=st.session_state.run_button)
-
-# LLM 통합 (주석처리된 부분)
-# if st.session_state.run_button_clicked:
-#     with st.spinner('In progress..'):
-#         st.markdown(llama_LLM.response(st.session_selected_imgs[1], st.session_selected_imgs[2], st.session_selected_imgs[3]))
+if st.button('운명 확인하기'):
+    with st.spinner('운명 확인중...'):
+        # st.session_state에 selected_card가 있는지 확인 필요
+        if 'selected_card' in st.session_state:
+            response = tarot_with_llm.ollama_response('오늘의 운세', st.session_state.selected_card)
+            st.write(response)
+        else:
+            st.write("카드를 선택하지 않았습니다.")

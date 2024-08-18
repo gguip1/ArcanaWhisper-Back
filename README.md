@@ -13,6 +13,10 @@
 - resource/images/tarot_ 경로에 타로 카드 이미지 저장
 - Discord 참고
 
+## tarot_with_llm
+1. llama3.1:8b 모델은 ollama 설치 후 llama3.1:8b 모델 다운로드
+2. ollama 서버를 켜고 사용
+
 ## 유의 사항
 
 - 주요 키값은 .env에 저장해서 사용해주세요.
