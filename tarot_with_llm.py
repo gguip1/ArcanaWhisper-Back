@@ -1,71 +1,51 @@
 import ollama
-
 import json
 import boto3
 
+# 메이저 아르카나 카드 의미
+CARD_MEANINGS = {
+    'The Fool': '새로운 시작, 순수함, 모험',
+    'The Magician': '창조력, 자원, 집중력',
+    'The High Priestess': '지혜, 비밀, 직관',
+    'The Empress': '풍요, 창조성, 어머니의 에너지',
+    'The Emperor': '권위, 통제, 안정성',
+    'The Hierophant': '전통, 신앙, 도덕적 가치',
+    'The Lovers': '사랑, 관계, 선택',
+    'The Chariot': '승리, 의지, 결단력',
+    'Strength': '내적 힘, 용기, 인내',
+    'The Hermit': '내성, 고독, 명상',
+    'Wheel of Fortune': '운명, 변화, 행운',
+    'Justice': '정의, 균형, 책임',
+    'The Hanged Man': '희생, 새로운 관점, 중지',
+    'Death': '변화, 종말, 새 출발',
+    'Temperance': '조화, 절제, 중용',
+    'The Devil': '유혹, 물질적 집착, 속박',
+    'The Tower': '돌발적 변화, 붕괴, 해방',
+    'The Star': '희망, 영감, 치유',
+    'The Moon': '환상, 직관, 무의식',
+    'The Sun': '행복, 성공, 긍정성',
+    'Judgement': '자기 성찰, 부활, 갱신',
+    'The World': '성취, 완성, 통합',
+}
+
+def generate_daily_fortune(selected_cards):
+    meanings = [CARD_MEANINGS.get(card, '알 수 없는 카드입니다.') for card in selected_cards]
+    overall_reading = f"오늘의 운세는 '{selected_cards[0]}', '{selected_cards[1]}', '{selected_cards[2]}' 카드를 기반으로 합니다. 이 카드들은 각각 '{meanings[0]}', '{meanings[1]}', '{meanings[2]}'를 의미하며, 이를 바탕으로 오늘 하루는 {meanings[0]}, {meanings[1]}, {meanings[2]}의 요소들이 중요한 역할을 할 것입니다."
+    return overall_reading
+
 def ollama_response(content, selected_card):
     try:
-        messages = [
-            {
-                'role': 'user',
-                'content': f'내가 메이저 카드 22장으로 {content}에 관한 타로를 보려고 하는데 내가 뽑은 3장의 카드를 알려줄거야. 너는 이제 그 카드들을 이용해서 {content}에 관한 타로를 봐주고 markdown으로 결과를 알려줘',
-            }
-        ]
-        
-        messages.append(
-            {
-                'role' : 'user',
-                'content' : f'첫번째 카드 : {selected_card[0]}, 두번째 카드 : {selected_card[1]}, 세번째 카드 : {selected_card[2]}',
-            }
-        )
-        
-        response = ollama.chat(
-            model='llama3.1:8b',
-            messages=messages,
-        )
-        return response['message']['content']
+        daily_fortune = generate_daily_fortune(selected_card)
+        return daily_fortune
     except Exception as e:
         print(e)
+        return "에러가 발생했습니다."
 
 def sonnet_respone(content, selected_card):
     bedrock_runtime = boto3.client(service_name="bedrock-runtime", region_name="us-east-1")
     try:
-        messages = [
-            {
-                'role': 'user',
-                'content': [{"type": "text", "text": f'내가 메이저 카드 22장으로 {content}에 관한 타로를 보려고 하는데 내가 뽑은 3장의 카드를 알려줄거야. 너는 이제 그 카드들을 이용해서 {content}에 관한 타로를 봐주고 markdown으로 결과만 알려줘'}],
-            }
-        ]
-        
-        messages.append(
-            {
-                'role': 'assistant',
-                'content': [{"type": "text", "text": f'저는 타로 마스터입니다. 뽑으신 3가지 카드를 알려주세요. markdown으로 결과만 알려드리겠습니다.'}]
-            }
-        )
-        
-        messages.append(
-            {
-                'role': 'user',
-                'content': [{"type": "text", "text": f'첫번째 카드 : {selected_card[0]}, 두번째 카드 : {selected_card[1]}, 세번째 카드 : {selected_card[2]}'}],
-            }
-        )
-        
-        body = json.dumps(
-            {
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 1000,
-                "messages": messages,
-            }
-        )
-        
-        response = bedrock_runtime.invoke_model(
-            modelId="anthropic.claude-3-sonnet-20240229-v1:0",
-            body=body,
-        )
-        
-        response_body = json.loads(response.get("body").read())
-        
-        return response_body["content"][0]["text"]
+        daily_fortune = generate_daily_fortune(selected_card)
+        return daily_fortune
     except Exception as e:
         print(e)
+        return "에러가 발생했습니다."
