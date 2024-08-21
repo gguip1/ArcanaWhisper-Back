@@ -69,3 +69,12 @@ def sonnet_respone(content, selected_card):
         return response_body["content"][0]["text"]
     except Exception as e:
         print(e)
+
+def tarot_response(tarot_reader,tarot_type, selected_card):
+    print(tarot_reader)
+    if tarot_reader == "llama3.1:8b":
+        return ollama_response(tarot_type, selected_card)
+    elif tarot_reader == "":
+        return sonnet_respone(tarot_type, selected_card)
+    else:
+        return False
