@@ -8,10 +8,7 @@
 4. streamlit run app.py
 
 ## 타로 카드 리소스
-
-- https://blog.naver.com/unbend/221376410990
-- resource/images/tarot_ 경로에 타로 카드 이미지 저장
-- Discord 참고
+-------------
 
 ## tarot_with_llm
 1. llama3.1:8b 모델은 ollama 설치 후 llama3.1:8b 모델 다운로드
