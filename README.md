@@ -1,20 +1,19 @@
-# 타로
+# ArcanaWhisper
+LLM을 이용하여 타로 카드 리딩 서비스를 제공하는 웹 서비스입니다.
 
-## 개발 환경 구축 및 서버 동작
+## 1. 사전 작업
+- data / images
+- data / lottie
+- data / tarot_cards.json
+- .env
 
+## 2. 실행 방법
 1. python -m venv venv
-2. venv/scripts/activate
+2. source venv/bin/activate (윈도우는 venv\Scripts\activate)
 3. pip install -r requirements.txt
 4. streamlit run app.py
+5. http://localhost:8501/
 
-## 타로 카드 리소스
--------------
+## Demo Live
+[ArcanaWhisper](http://aitarot.site:8501/)
 
-## tarot_with_llm
-1. llama3.1:8b 모델은 ollama 설치 후 llama3.1:8b 모델 다운로드
-2. ollama 서버를 켜고 사용
-
-## 유의 사항
-
-- 주요 키값은 .env에 저장해서 사용해주세요.
-- 수정 사항이 있으면 branch를 만들어서 수정한 후 커밋해서 푸쉬해주세요.
