@@ -15,5 +15,5 @@ LLM을 이용하여 타로 카드 리딩 서비스를 제공하는 웹 서비스
 5. http://localhost:8501/
 
 ## Demo Live
-[ArcanaWhisper](http://aitarot.site:8501/)
+- [ArcanaWhisper](http://aitarot.site:8501/)
 
