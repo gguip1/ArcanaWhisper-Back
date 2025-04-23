@@ -3,3 +3,5 @@ venv
 data
 __pycache__
 .vscode
+private
+./src/private
