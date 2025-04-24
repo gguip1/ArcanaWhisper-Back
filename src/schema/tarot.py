@@ -11,3 +11,9 @@ class TarotRequest(BaseModel):
 class TarotResponse(BaseModel):
     cards: List[int]
     result: str
+
+class HistoryItem(BaseModel):
+    question: str
+    cards: List[int]
+    result: str
+    created_at: str = Field(..., example="2023-10-01T12:00:00Z")

@@ -8,4 +8,4 @@ class HistoryModel(BaseModel):
     question: str
     cards: List[int] = Field(..., min_items=3, max_items=3)
     result: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
