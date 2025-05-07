@@ -4,6 +4,7 @@ from firebase_admin import firestore
 from google.cloud.firestore import FieldFilter
 
 from model.history_model import HistoryModel
+from utils.normalize import normalize_history_data
 
 class HistoryRepository:
     def __init__(self):
@@ -17,7 +18,7 @@ class HistoryRepository:
         user_id: str, 
         provider: str,
         limit: int = 5,
-        start_after_created_at: Optional[str] = None
+        cursor_doc_id: Optional[str] = None,
         ) -> list[HistoryModel]:
         
         query = (
@@ -28,12 +29,16 @@ class HistoryRepository:
             .limit(limit)
         )
         
-        if start_after_created_at:
-            try:
-                dt = datetime.strptime(start_after_created_at, "%Y-%m-%d %H:%M:%S")
-                query = query.start_after({"created_at": dt})
-            except ValueError:
-                raise ValueError("Invalid date format. Use 'YYYY-MM-DD HH:MM:SS'.")
+        if cursor_doc_id:
+            doc_snapshot = self.collection.document(cursor_doc_id).get()
+            if not doc_snapshot.exists:
+                raise ValueError("Invalid cursor document ID.")
+            query = query.start_after(doc_snapshot)
         
         docs = query.get()
-        return [HistoryModel(**doc.to_dict()) for doc in docs]
+        history_models = []
+        for doc in docs:
+            data = normalize_history_data(doc.to_dict())
+            history_models.append(HistoryModel(**data))
+
+        return history_models, docs[-1].id if docs else None

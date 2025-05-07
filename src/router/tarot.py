@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, Query
-from typing import List
+from typing import List, Optional
 
 from dependencies.dependencies import get_history_repository
 from repository.history_repository import HistoryRepository
-from schema.tarot import HistoryItem, TarotRequest, TarotResponse
-from schema.user import UserRequest
+from schema.tarot import HistoryResponse, TarotRequest, TarotResponse
 from services.history_service import HistoryService
 from services.tarot_service import TarotService
 
@@ -26,17 +25,18 @@ async def get_tarot_reading(
     
     return result
 
-@router.get("/tarot/history", response_model=List[HistoryItem])
-async def get_tarot_history(
-    # request: UserRequest,
+@router.get("/tarot/history", response_model=HistoryResponse)
+def get_tarot_history(
     user_id: str = Query(..., description="OAuth 식별자"),
     provider: str = Query(..., description="OAuth 제공자"),
+    cursor_doc_id: Optional[str] = Query(None, description="다음 페이지를 위한 커서"),
     history_repository: HistoryRepository = Depends(get_history_repository)
     ):
     historyService = HistoryService(
-        user_id,
-        provider, 
-        history_repository
+        user_id=user_id,
+        provider=provider,
+        cursor_doc_id=cursor_doc_id,
+        history_repository=history_repository
     )
     history = historyService.get_history()
     
