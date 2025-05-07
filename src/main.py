@@ -4,11 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from router import tarot
 from config.firebase_config import init_firebase
 
-app = FastAPI(docs_url='/docs')
+# app = FastAPI(docs_url='/docs')
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://aitarot.site"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
