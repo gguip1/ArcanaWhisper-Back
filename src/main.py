@@ -2,10 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from router import tarot
-from config.firebase_config import init_firebase
+from config.firebase_config import lifespan
 
 # app = FastAPI(docs_url='/docs')
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -15,6 +15,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-init_firebase(app)
+# init_firebase(app)
 
 app.include_router(tarot.router, tags=["tarot"])
