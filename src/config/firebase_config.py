@@ -2,7 +2,7 @@ import firebase_admin
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials
 from utils.api_key_loader import get_api_key
 
 @asynccontextmanager
