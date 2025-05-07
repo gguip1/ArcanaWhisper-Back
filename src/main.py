@@ -15,6 +15,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(tarot.router, tags=["tarot"])
-
 init_firebase(app)
+
+app.include_router(tarot.router, tags=["tarot"])
