@@ -7,5 +7,8 @@
 - FastAPI, LangChain, Gemini
 
 ## Live
-- [ArcanaWhisper](https://www.aitarot.site/)
+- 서버 이전 작업 중 Azure to AWS
+- CI/CD 구성 중
+<!-- - [ArcanaWhisper](https://www.aitarot.site/) -->
+
 
