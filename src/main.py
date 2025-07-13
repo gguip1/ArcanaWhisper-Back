@@ -1,15 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from router import tarot
-from config.firebase_config import lifespan
+from .router import tarot
+from .config.firebase_config import lifespan
 
 # app = FastAPI(docs_url='/docs')
-app = FastAPI(lifespan=lifespan)
+# app = FastAPI(lifespan=lifespan, docs_url='/docs', redoc_url=None, openapi_url=None)
+app = FastAPI(lifespan=lifespan, docs_url='/docs')
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://aitarot.site", "https://www.aitarot.site"],
+    allow_origins=["https://aitarot.site", "https://www.aitarot.site", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

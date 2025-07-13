@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, Query
 from typing import List, Optional
 
-from dependencies.dependencies import get_history_repository
-from repository.history_repository import HistoryRepository
-from schema.tarot import HistoryResponse, TarotRequest, TarotResponse
-from services.history_service import HistoryService
-from services.tarot_service import TarotService
+from src.dependencies.dependencies import get_history_repository
+from src.repository.history_repository import HistoryRepository
+from src.schema.tarot import HistoryResponse, TarotRequest, TarotResponse
+from src.services.history_service import HistoryService
+from src.services.tarot_service import TarotService
 
 router = APIRouter()
 

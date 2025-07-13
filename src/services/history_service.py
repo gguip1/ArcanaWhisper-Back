@@ -1,6 +1,6 @@
-from repository.history_repository import HistoryRepository
-from schema.tarot import HistoryItem, TarotCards
-from schema.tarot import HistoryResponse
+from src.repository.history_repository import HistoryRepository
+from src.schema.tarot import HistoryItem, TarotCards
+from src.schema.tarot import HistoryResponse
 
 
 class HistoryService:

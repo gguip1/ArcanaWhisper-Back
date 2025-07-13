@@ -3,11 +3,11 @@ from fastapi import HTTPException
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from model.history_model import HistoryModel
-from repository.history_repository import HistoryRepository
-from schema.tarot import TarotCards, TarotResponse
-from utils.json_loader import get_tarot_cards
-from utils.api_key_loader import get_api_key
+from src.model.history_model import HistoryModel
+from src.repository.history_repository import HistoryRepository
+from src.schema.tarot import TarotCards, TarotResponse
+from src.utils.json_loader import get_tarot_cards
+from src.utils.api_key_loader import get_api_key
 
 LLM = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash-lite",
@@ -57,7 +57,7 @@ class TarotService:
         return prompt
     
     def get_formatted_cards(self) -> str:
-        tarot_cards = get_tarot_cards('./data/tarot_cards.json')
+        tarot_cards = get_tarot_cards('./src/data/tarot_cards.json')
         
         formatted = []
         for card_num, is_reversed in zip(self.cards.cards, self.cards.reversed):

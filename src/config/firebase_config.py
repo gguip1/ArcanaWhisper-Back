@@ -3,14 +3,14 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
 from firebase_admin import credentials
-from utils.api_key_loader import get_api_key
+from src.utils.api_key_loader import get_api_key
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup 처리
     try:
         if not firebase_admin._apps:
-            cred_path = get_api_key("GOOGLE_APPLICATION_CREDENTIALS")
+            cred_path = get_api_key("GOOGLE_APPLICATION_CREDENTIALS_PATH")
             cred = credentials.Certificate(cred_path)
             firebase_admin.initialize_app(cred)
     except Exception as e:

@@ -1,7 +1,7 @@
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, Field
-from schema.tarot import TarotCards
+from src.schema.tarot import TarotCards
 
 class HistoryModel(BaseModel):
     user_id: Optional[str]

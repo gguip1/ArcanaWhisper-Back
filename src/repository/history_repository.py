@@ -3,8 +3,8 @@ from typing import Optional
 from firebase_admin import firestore
 from google.cloud.firestore import FieldFilter
 
-from model.history_model import HistoryModel
-from utils.normalize import normalize_history_data
+from src.model.history_model import HistoryModel
+from src.utils.normalize import normalize_history_data
 
 class HistoryRepository:
     def __init__(self):

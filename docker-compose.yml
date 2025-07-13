@@ -1,0 +1,12 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: arcana_whisper_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src/private:/app/src/private
+    env_file:
+      - .env
