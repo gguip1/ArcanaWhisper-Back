@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: arcana_whisper_backend
+    image: gguip-github-io-backend
     ports:
       - "8000:8000"
     volumes:

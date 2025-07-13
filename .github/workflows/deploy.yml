@@ -39,11 +39,11 @@ jobs:
           aws ssm send-command \
               --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
               --document-name "AWS-RunShellScript" \
-              --parameters '
-                  commands: [
+              --parameters '{
+                  "commands": [
                       "docker stop gguip-github-io-backend || true",
                       "docker rm gguip-github-io-backend || true",
                       "aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
-                      "docker run -d --name gguip-github-io-backend -p 8080:8080 $ECR_REGISTRY/$ECR_REPOSITORY:${{github.sha}}"
+                      "docker run -d --name gguip-github-io-backend -p 8000:8000 $ECR_REGISTRY/$ECR_REPOSITORY:${{github.sha}}"
                   ]
-              '
+              }'
