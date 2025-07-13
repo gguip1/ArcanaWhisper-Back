@@ -40,7 +40,7 @@ jobs:
               --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
               --document-name "AWS-RunShellScript" \
               --parameters '
-                  "commands": [
+                  commands: [
                       "docker stop gguip-github-io-backend || true",
                       "docker rm gguip-github-io-backend || true",
                       "aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
