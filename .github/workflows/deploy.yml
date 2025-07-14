@@ -44,6 +44,6 @@ jobs:
                       "docker stop gguip-github-io-backend || true",
                       "docker rm gguip-github-io-backend || true",
                       "aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
-                      "docker run -d --name gguip-github-io-backend -p 8000:8000 '$REGISTRY'/'$ECR_REPOSITORY':'$GITHUB_SHA'"
+                      "docker run -d --name gguip-github-io-backend -p 8000:8000 $REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
                   ]
               }'
