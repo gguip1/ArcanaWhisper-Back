@@ -53,11 +53,11 @@ jobs:
               'aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}',
               'docker stop gguip-github-io-backend || true && docker rm gguip-github-io-backend || true',
               'docker pull ${{ env.IMAGE_URI }}',
-              'echo ''${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}'' > ${EC2_CRED_PATH}',
+              'echo ''${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}'' > ${{ env.EC2_CRED_PATH }}',
               'docker run -d --name gguip-github-io-backend --restart always -p 8000:8000 \
-              -v ${EC2_CRED_PATH}:${{ env.CONTAINER_CRED_PATH }} \
+              -v ${{ env.EC2_CRED_PATH }}:${{ env.CONTAINER_CRED_PATH }} \
               -e GOOGLE_APPLICATION_CREDENTIALS=${{ env.CONTAINER_CRED_PATH }} \
               ${{ env.IMAGE_URI }}'
 
-              'rm -f ${EC2_CRED_PATH}'
+              'rm -f ${{ env.EC2_CRED_PATH }}'
             ]"
