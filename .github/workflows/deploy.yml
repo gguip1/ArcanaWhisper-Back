@@ -42,11 +42,22 @@ jobs:
         env:
           IMAGE_URI: ${{ steps.build-image.outputs.image }}
         run: |
+          EC2_CRED_PATH = "/tmp/gcp_credentials.json"
+          CONTAINER_CRED_PATH = "/app/gcp_credentials.json" 
+
           aws ssm send-command \
             --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy: ${GITHUB_SHA::7}" \
             --parameters "commands=[
               'aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}',
-              'docker stop gguip-github-io-backend || true && docker rm gguip-github-io-backend || true && docker pull ${{ env.IMAGE_URI }} && docker run -d --name gguip-github-io-backend --restart always -p 8000:8000 ${{ env.IMAGE_URI }}'
+              'docker stop gguip-github-io-backend || true && docker rm gguip-github-io-backend || true',
+              'docker pull ${{ env.IMAGE_URI }}',
+              'echo ''${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}'' > ${EC2_CRED_PATH}',
+              'docker run -d --name gguip-github-io-backend --restart always -p 8000:8000 \
+              -v ${EC2_CRED_PATH}:${CONTAINER_CRED_PATH} \
+              -e GOOGLE_APPLICATION_CREDENTIALS=${CONTAINER_CRED_PATH} \
+              ${{ env.IMAGE_URI }}'
+
+              'rm -f ${EC2_CRED_PATH}'
             ]"
