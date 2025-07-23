@@ -2,20 +2,23 @@ name: Deploy to AWS EC2
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 env:
-  AWS_REGION: "ap-northeast-2"
-  ECR_REPOSITORY: "gguip-github-io-ecr"
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: gguip-github-io-ecr
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -23,27 +26,30 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push Docker image
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{github.sha}} .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{github.sha}}
+          docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }} .
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          echo "image=$ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }}" >> $GITHUB_OUTPUT
 
-      - name: Deploy to EC2 using SSM
+      - name: Deploy to EC2 using AWS SSM
         env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_URI: ${{ steps.build-image.outputs.image }}
         run: |
           aws ssm send-command \
-              --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
-              --document-name "AWS-RunShellScript" \
-              --parameters '{
-                  "commands": [
-                      "docker stop gguip-github-io-backend || true",
-                      "docker rm gguip-github-io-backend || true",
-                      "aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
-                      "docker run -d --name gguip-github-io-backend -p 8000:8000 $REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
-                  ]
-              }'
+            --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploying FastAPI with image ${{ env.IMAGE_URI }}" \
+            --parameters "commands=[
+              'aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}',
+              'docker stop gguip-github-io-backend || true',
+              'docker rm gguip-github-io-backend || true',
+              'docker pull ${{ env.IMAGE_URI }}',
+              'docker run -d --name gguip-github-io-backend --restart always -p 8000:8000 ${{ env.IMAGE_URI }}'
+            ]"
