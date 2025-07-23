@@ -43,7 +43,7 @@ jobs:
           IMAGE_URI: ${{ steps.build-image.outputs.image }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           EC2_CRED_PATH: "/tmp/gcp_credentials.json"
-          CONTAINER_CRED_PATH: "/app/gcp_credentials.json"
+          CONTAINER_CRED_PATH: "/app/src/private/gcp_credentials.json"
           GCP_JSON_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
         run: |
           aws ssm send-command \
