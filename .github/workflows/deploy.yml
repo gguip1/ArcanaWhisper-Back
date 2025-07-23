@@ -57,8 +57,8 @@ jobs:
               \"echo '${GCP_JSON_CREDS}' > ${{ env.EC2_CRED_PATH }}\",
               'docker run -d --name gguip-github-io-backend --restart always -p 8000:8000 \
                 -v ${{ env.EC2_CRED_PATH }}:${{ env.CONTAINER_CRED_PATH }} \
-                -e GOOGLE_APPLICATION_CREDENTIALS=${{ env.CONTAINER_CRED_PATH }} \
                 -e GEMINI_API_KEY=${{ env.GEMINI_API_KEY }} \
+                -e GOOGLE_APPLICATION_CREDENTIALS_PATH=${{ env.CONTAINER_CRED_PATH }} \
                 ${{ env.IMAGE_URI }}',
               'rm ${{ env.EC2_CRED_PATH }}'
             ]"
