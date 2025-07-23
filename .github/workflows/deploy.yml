@@ -41,6 +41,7 @@ jobs:
       - name: Deploy to EC2 using AWS SSM
         env:
           IMAGE_URI: ${{ steps.build-image.outputs.image }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           EC2_CRED_PATH: "/tmp/gcp_credentials.json"
           CONTAINER_CRED_PATH: "/app/gcp_credentials.json"
           GCP_JSON_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
@@ -57,6 +58,7 @@ jobs:
               'docker run -d --name gguip-github-io-backend --restart always -p 8000:8000 \
                 -v ${{ env.EC2_CRED_PATH }}:${{ env.CONTAINER_CRED_PATH }} \
                 -e GOOGLE_APPLICATION_CREDENTIALS=${{ env.CONTAINER_CRED_PATH }} \
+                -e GEMINI_API_KEY=${{ env.GEMINI_API_KEY }} \
                 ${{ env.IMAGE_URI }}',
               'rm ${{ env.EC2_CRED_PATH }}'
             ]"
