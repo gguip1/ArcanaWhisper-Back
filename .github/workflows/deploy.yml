@@ -54,7 +54,7 @@ jobs:
               'aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}',
               'docker stop gguip-github-io-backend || true && docker rm gguip-github-io-backend || true',
               'docker pull ${{ env.IMAGE_URI }}',
-              \"printf '%s' '${GCP_JSON_CREDENTIALS}' > ${{ env.EC2_CRED_PATH }}\",
+              "echo '${GCP_JSON_BASE64}' | base64 -d > ${{ env.EC2_CRED_PATH }}",
               'docker run -d --name gguip-github-io-backend --restart always -p 8000:8000 \
                 -v ${{ env.EC2_CRED_PATH }}:${{ env.CONTAINER_CRED_PATH }} \
                 -e GEMINI_API_KEY=${{ env.GEMINI_API_KEY }} \
