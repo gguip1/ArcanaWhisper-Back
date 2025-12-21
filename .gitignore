@@ -5,3 +5,16 @@ __pycache__
 .vscode
 private
 ./src/private
+credentials/
+
+.claude
+.mcp.json
+
+# Lambda 배포 관련
+.aws-sam/
+firebase_cred_base64.txt
+samconfig.toml
+
+# 로컬 문서/스크립트
+docs/
+scripts/

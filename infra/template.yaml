@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ArcanaWhisper - AI Tarot Reading API
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: python3.11
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        GEMINI_API_KEY_PARAM: !Ref GeminiApiKeyParam
+        FIREBASE_CREDENTIALS_PARAM: !Ref FirebaseCredentialsParam
+        TAROT_SYSTEM_PROMPT_PARAM: !Ref TarotSystemPromptParam
+
+Parameters:
+  GeminiApiKeyParam:
+    Type: String
+    Description: SSM Parameter Store path for Gemini API Key
+    Default: "/arcana-whisper/gemini-api-key"
+  FirebaseCredentialsParam:
+    Type: String
+    Description: SSM Parameter Store path for Firebase credentials (base64 encoded)
+    Default: "/arcana-whisper/firebase-credentials"
+  TarotSystemPromptParam:
+    Type: String
+    Description: SSM Parameter Store path for Tarot system prompt
+    Default: "/arcana-whisper/prompts/tarot-system"
+  AllowedOrigins:
+    Type: String
+    Default: "https://aitarot.site,https://www.aitarot.site"
+    Description: Allowed CORS origins (comma separated)
+
+Resources:
+  # Lambda Function
+  TarotFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: arcana-whisper-api
+      CodeUri: ../
+      Handler: src.lambda_handler.handler
+      Description: AI Tarot Reading API
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: "arcana-whisper/*"
+      Events:
+        TarotPost:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TarotHttpApi
+            Path: /tarot
+            Method: POST
+        TarotHistoryGet:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TarotHttpApi
+            Path: /tarot/history
+            Method: GET
+        TarotOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TarotHttpApi
+            Path: /tarot
+            Method: OPTIONS
+        TarotHistoryOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TarotHttpApi
+            Path: /tarot/history
+            Method: OPTIONS
+
+  # HTTP API (API Gateway v2)
+  TarotHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: prod
+      CorsConfiguration:
+        AllowOrigins:
+          - "https://aitarot.site"
+          - "https://www.aitarot.site"
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        MaxAge: 300
+
+Outputs:
+  TarotApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${TarotHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+  TarotFunction:
+    Description: Lambda Function ARN
+    Value: !GetAtt TarotFunction.Arn
