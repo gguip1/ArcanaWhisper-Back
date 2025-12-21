@@ -75,7 +75,7 @@ Resources:
   TarotHttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
-      StageName: prod
+      StageName: $default
       CorsConfiguration:
         AllowOrigins:
           - "https://aitarot.site"
@@ -92,7 +92,7 @@ Resources:
 Outputs:
   TarotApiUrl:
     Description: API Gateway endpoint URL
-    Value: !Sub "https://${TarotHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+    Value: !Sub "https://${TarotHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
   TarotFunction:
     Description: Lambda Function ARN
     Value: !GetAtt TarotFunction.Arn
