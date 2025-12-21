@@ -1,13 +1,14 @@
-name: Deploy to AWS EC2
+name: Deploy to AWS Lambda
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 env:
   AWS_REGION: ap-northeast-2
-  ECR_REPOSITORY: gguip-github-io-ecr
+  STACK_NAME: arcana-whisper
 
 jobs:
   deploy:
@@ -17,6 +18,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -24,41 +33,26 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
+      - name: Build SAM application
         run: |
-          docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }} .
-          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
-          echo "image=$ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }}" >> $GITHUB_OUTPUT
+          cd infra
+          sam build
 
-      - name: Deploy to EC2 using AWS SSM
-        env:
-          IMAGE_URI: ${{ steps.build-image.outputs.image }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          EC2_CRED_PATH: "/tmp/gcp_credentials.json"
-          CONTAINER_CRED_PATH: "/app/src/private/gcp_credentials.json"
-          GCP_JSON_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      - name: Deploy SAM application
         run: |
-          aws ssm send-command \
-            --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
-            --document-name "AWS-RunShellScript" \
-            --comment "Deploy: ${{ github.sha }}" \
-            --parameters "commands=[
-              'aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}',
-              'docker stop gguip-github-io-backend || true && docker rm gguip-github-io-backend || true',
-              'docker pull ${{ env.IMAGE_URI }}',
-              "echo '${GCP_JSON_BASE64}' | base64 -d > ${{ env.EC2_CRED_PATH }}",
-              'docker run -d --name gguip-github-io-backend --restart always -p 8000:8000 \
-                -v ${{ env.EC2_CRED_PATH }}:${{ env.CONTAINER_CRED_PATH }} \
-                -e GEMINI_API_KEY=${{ env.GEMINI_API_KEY }} \
-                -e GOOGLE_APPLICATION_CREDENTIALS_PATH=${{ env.CONTAINER_CRED_PATH }} \
-                ${{ env.IMAGE_URI }}',
-              'rm ${{ env.EC2_CRED_PATH }}'
-            ]"
+          cd infra
+          sam deploy \
+            --stack-name ${{ env.STACK_NAME }} \
+            --region ${{ env.AWS_REGION }} \
+            --resolve-s3 \
+            --capabilities CAPABILITY_IAM \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset
+
+      - name: Get API URL
+        run: |
+          API_URL=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.STACK_NAME }} \
+            --query "Stacks[0].Outputs[?OutputKey=='TarotApiUrl'].OutputValue" \
+            --output text)
+          echo "API URL: $API_URL"
