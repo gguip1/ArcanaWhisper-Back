@@ -99,7 +99,9 @@ def handler(event, _context):
     else:
         path = raw_path
 
-    if path == "/tarot" and http_method == "POST":
+    if path == "/health" and http_method == "GET":
+        return response(200, {"status": "ok"})
+    elif path == "/tarot" and http_method == "POST":
         return handle_tarot_reading(event)
     elif path == "/tarot/history" and http_method == "GET":
         return handle_tarot_history(event)
