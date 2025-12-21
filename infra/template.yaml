@@ -46,6 +46,12 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: "arcana-whisper/*"
       Events:
+        HealthCheck:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TarotHttpApi
+            Path: /health
+            Method: GET
         TarotPost:
           Type: HttpApi
           Properties:
