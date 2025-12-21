@@ -14,6 +14,7 @@ Globals:
         GEMINI_API_KEY_PARAM: !Ref GeminiApiKeyParam
         FIREBASE_CREDENTIALS_PARAM: !Ref FirebaseCredentialsParam
         TAROT_SYSTEM_PROMPT_PARAM: !Ref TarotSystemPromptParam
+        TAROT_CARDS_PARAM: !Ref TarotCardsParam
 
 Parameters:
   GeminiApiKeyParam:
@@ -28,6 +29,10 @@ Parameters:
     Type: String
     Description: SSM Parameter Store path for Tarot system prompt
     Default: "/arcana-whisper/prompts/tarot-system"
+  TarotCardsParam:
+    Type: String
+    Description: SSM Parameter Store path for Tarot cards data
+    Default: "/arcana-whisper/tarot-cards"
   AllowedOrigins:
     Type: String
     Default: "https://aitarot.site,https://www.aitarot.site"
