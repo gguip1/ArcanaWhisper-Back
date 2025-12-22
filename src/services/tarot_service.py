@@ -152,9 +152,10 @@ Selected Cards:
             SystemMessage(content=self.get_prompt()),
             HumanMessage(content=self.get_human_message()),
         ]
-        
+
         try:
-            response = await LLM.ainvoke(messages)
+            # 동기 API 사용 (Lambda event loop 재사용 문제 해결)
+            response = LLM.invoke(messages)
         except Exception as e:
             logger.error(f"Error during LLM invocation: {e}")
             raise RuntimeError("LLM invocation failed") from e
