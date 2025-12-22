@@ -4,7 +4,7 @@ import os
 import base64
 
 import firebase_admin
-from firebase_admin import credentials
+from firebase_admin import credentials, auth as firebase_auth
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -78,6 +78,37 @@ def response(status_code: int, body: dict) -> dict:
 def error_response(status_code: int, message: str) -> dict:
     return response(status_code, {"error": message})
 
+
+def verify_firebase_token(authorization: str) -> dict:
+    """
+    Firebase ID Token 검증
+
+    Args:
+        authorization: "Bearer <token>" 형식의 헤더 값
+
+    Returns:
+        dict: { uid, email, provider }
+
+    Raises:
+        ValueError: 토큰이 없거나 유효하지 않은 경우
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        raise ValueError("Authorization header missing")
+
+    token = authorization.split("Bearer ")[1]
+
+    try:
+        decoded = firebase_auth.verify_id_token(token)
+        return {
+            "uid": decoded["uid"],
+            "email": decoded.get("email"),
+            "provider": decoded.get("firebase", {}).get("sign_in_provider", "unknown")
+        }
+    except firebase_auth.InvalidIdTokenError:
+        raise ValueError("Invalid token")
+    except firebase_auth.ExpiredIdTokenError:
+        raise ValueError("Token expired")
+
 # ============================================================
 # Lambda Handler
 # ============================================================
@@ -148,8 +179,20 @@ def handle_tarot_reading(event) -> dict:
             reversed=cards_data.get("reversed", [False, False, False])
         )
 
-        user_id = data.get("user_id")
-        provider = data.get("provider")
+        # Authorization 헤더에서 사용자 정보 추출 (비로그인 허용)
+        headers = event.get("headers", {})
+        authorization = headers.get("authorization")
+
+        user_id = None
+        provider = None
+
+        if authorization:
+            try:
+                user = verify_firebase_token(authorization)
+                user_id = user["uid"]
+                provider = user["provider"]
+            except ValueError:
+                pass  # 토큰 실패해도 비로그인으로 처리
 
         # 비동기 함수 실행
         history_repository = HistoryRepository()
@@ -175,17 +218,21 @@ def handle_tarot_reading(event) -> dict:
 def handle_tarot_history(event) -> dict:
     """GET /tarot/history - 타로 히스토리 조회"""
     try:
-        # Query parameters 파싱
+        # Authorization 헤더에서 토큰 검증
+        headers = event.get("headers", {})
+        authorization = headers.get("authorization")  # API Gateway HTTP API는 소문자
+
+        try:
+            user = verify_firebase_token(authorization)
+        except ValueError as e:
+            return error_response(401, str(e))
+
+        user_id = user["uid"]
+        provider = user["provider"]
+
+        # Query parameters에서 커서만 파싱
         params = event.get("queryStringParameters") or {}
-
-        user_id = params.get("user_id")
-        provider = params.get("provider")
         cursor_doc_id = params.get("cursor_doc_id")
-
-        if not user_id:
-            return error_response(400, "user_id is required")
-        if not provider:
-            return error_response(400, "provider is required")
 
         # 히스토리 조회
         history_repository = HistoryRepository()
