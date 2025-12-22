@@ -152,9 +152,27 @@ async def _async_tarot_reading(user_id, provider, question, cards, history_repos
     return await tarot_service.get_tarot_reading()
 
 
+def _run_async(coro):
+    """
+    Lambda 환경에서 안전하게 비동기 함수 실행.
+
+    asyncio.run()은 매 호출마다 event loop를 생성하고 닫는데,
+    Lambda warm start 시 이전 요청에서 캐시된 httpx 클라이언트가
+    닫힌 event loop를 참조하여 RuntimeError 발생.
+
+    해결: 명시적으로 새 event loop를 생성하고 설정.
+    """
+    import asyncio
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        return loop.run_until_complete(coro)
+    finally:
+        loop.close()
+
+
 def handle_tarot_reading(event) -> dict:
     """POST /tarot - 타로 리딩 요청 처리"""
-    import asyncio
 
     try:
         # Body 파싱
@@ -196,7 +214,7 @@ def handle_tarot_reading(event) -> dict:
 
         # 비동기 함수 실행
         history_repository = HistoryRepository()
-        result = asyncio.run(_async_tarot_reading(
+        result = _run_async(_async_tarot_reading(
             user_id, provider, question, cards, history_repository
         ))
 
