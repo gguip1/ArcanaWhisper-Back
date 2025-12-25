@@ -55,6 +55,7 @@ _init_firebase()
 # ============================================================
 from src.services.tarot_service import TarotService
 from src.services.history_service import HistoryService
+from src.services.usage_service import UsageService
 from src.repository.history_repository import HistoryRepository
 from src.schema.tarot import TarotCards
 
@@ -64,7 +65,7 @@ from src.schema.tarot import TarotCards
 CORS_HEADERS = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Guest-Token",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
 }
 
@@ -136,6 +137,8 @@ def handler(event, _context):
         return handle_tarot_reading(event)
     elif path == "/tarot/history" and http_method == "GET":
         return handle_tarot_history(event)
+    elif path == "/usage" and http_method == "GET":
+        return handle_usage(event)
     else:
         return error_response(404, f"Not Found: {http_method} {path}")
 
@@ -175,6 +178,48 @@ def handle_tarot_reading(event) -> dict:
     """POST /tarot - 타로 리딩 요청 처리"""
 
     try:
+        # 헤더 파싱
+        headers = event.get("headers", {})
+        authorization = headers.get("authorization")
+        guest_token = headers.get("x-guest-token")
+
+        # 사용자 식별 및 Rate Limit 체크
+        usage_service = UsageService()
+        user_id = None
+        provider = None
+        is_guest = False
+
+        # 1. 로그인 먼저 확인
+        if authorization:
+            try:
+                user = verify_firebase_token(authorization)
+                user_id = user["uid"]
+                provider = user["provider"]
+
+                # 로그인 사용자 rate limit 체크
+                allowed, usage_info = usage_service.check_and_increment_user(user_id)
+                if not allowed:
+                    return response(429, {
+                        "error": "Rate limit exceeded",
+                        **usage_info
+                    })
+            except ValueError:
+                pass  # 토큰 유효하지 않으면 guest로 폴백
+
+        # 2. 로그인 실패/없음 → Guest 확인
+        if user_id is None:
+            if not guest_token:
+                return error_response(401, "Authentication required. Provide Authorization or X-Guest-Token header.")
+
+            is_guest = True
+            # Guest rate limit 체크
+            allowed, usage_info = usage_service.check_and_increment_guest(guest_token)
+            if not allowed:
+                return response(429, {
+                    "error": "Rate limit exceeded",
+                    **usage_info
+                })
+
         # Body 파싱
         body = event.get("body", "{}")
         if event.get("isBase64Encoded", False):
@@ -196,21 +241,6 @@ def handle_tarot_reading(event) -> dict:
             cards=cards_data.get("cards", []),
             reversed=cards_data.get("reversed", [False, False, False])
         )
-
-        # Authorization 헤더에서 사용자 정보 추출 (비로그인 허용)
-        headers = event.get("headers", {})
-        authorization = headers.get("authorization")
-
-        user_id = None
-        provider = None
-
-        if authorization:
-            try:
-                user = verify_firebase_token(authorization)
-                user_id = user["uid"]
-                provider = user["provider"]
-            except ValueError:
-                pass  # 토큰 실패해도 비로그인으로 처리
 
         # 비동기 함수 실행
         history_repository = HistoryRepository()
@@ -286,4 +316,43 @@ def handle_tarot_history(event) -> dict:
         return error_response(400, str(e))
     except Exception as e:
         logger.error(f"Error in handle_tarot_history: {e}", exc_info=True)
+        return error_response(500, "Internal Server Error")
+
+
+def handle_usage(event) -> dict:
+    """GET /usage - 사용량 조회"""
+    try:
+        headers = event.get("headers", {})
+        authorization = headers.get("authorization")
+        guest_token = headers.get("x-guest-token")
+
+        usage_service = UsageService()
+
+        # 1. 로그인 먼저 확인
+        if authorization:
+            try:
+                user = verify_firebase_token(authorization)
+                usage = usage_service.get_user_usage(user["uid"])
+                return response(200, {
+                    "type": "user",
+                    **usage,
+                    "reset_at": usage_service._get_kst_reset_time() if hasattr(usage_service, '_get_kst_reset_time') else None
+                })
+            except ValueError:
+                pass  # 토큰 유효하지 않으면 guest로 폴백
+
+        # 2. Guest 확인
+        if guest_token:
+            usage = usage_service.get_guest_usage(guest_token)
+            from src.services.usage_service import _get_kst_reset_time
+            return response(200, {
+                "type": "guest",
+                **usage,
+                "reset_at": _get_kst_reset_time()
+            })
+
+        return error_response(401, "Authentication required. Provide Authorization or X-Guest-Token header.")
+
+    except Exception as e:
+        logger.error(f"Error in handle_usage: {e}", exc_info=True)
         return error_response(500, "Internal Server Error")
