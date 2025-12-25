@@ -23,7 +23,7 @@ class HistoryService:
                 question=history.question,
                 cards=history.cards,
                 result=history.result,
-                created_at=history.created_at.strftime("%Y-%m-%d %H:%M:%S")
+                created_at=history.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
             ) for history in models
         ]
         
