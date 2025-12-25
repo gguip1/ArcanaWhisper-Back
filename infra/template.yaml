@@ -81,6 +81,18 @@ Resources:
             ApiId: !Ref TarotHttpApi
             Path: /tarot/history
             Method: OPTIONS
+        UsageGet:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TarotHttpApi
+            Path: /usage
+            Method: GET
+        UsageOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TarotHttpApi
+            Path: /usage
+            Method: OPTIONS
 
   # HTTP API (API Gateway v2)
   TarotHttpApi:
@@ -94,6 +106,7 @@ Resources:
         AllowHeaders:
           - Content-Type
           - Authorization
+          - X-Guest-Token
         AllowMethods:
           - GET
           - POST
