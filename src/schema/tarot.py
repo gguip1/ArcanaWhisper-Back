@@ -16,6 +16,7 @@ class TarotRequest(BaseModel):
 class TarotResponse(BaseModel):
     cards: TarotCards = Field(..., example={"cards": [1, 5, 22], "reversed": [False, True, False]})
     result: str
+    history_id: str = Field(..., description="Firestore document ID for sharing")
 
 class HistoryItem(BaseModel):
     question: str

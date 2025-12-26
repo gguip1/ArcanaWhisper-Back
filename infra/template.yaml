@@ -93,6 +93,30 @@ Resources:
             ApiId: !Ref TarotHttpApi
             Path: /usage
             Method: OPTIONS
+        ReadingsPost:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TarotHttpApi
+            Path: /readings
+            Method: POST
+        ReadingsOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TarotHttpApi
+            Path: /readings
+            Method: OPTIONS
+        ReadingsGet:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TarotHttpApi
+            Path: /readings/{share_id}
+            Method: GET
+        ReadingsIdOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TarotHttpApi
+            Path: /readings/{share_id}
+            Method: OPTIONS
 
   # HTTP API (API Gateway v2)
   TarotHttpApi:

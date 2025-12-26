@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Optional
 from firebase_admin import firestore
 from google.cloud.firestore import FieldFilter
@@ -10,8 +9,10 @@ class HistoryRepository:
     def __init__(self):
         self.collection = firestore.client().collection("tarot_history")
 
-    def save_tarot_reading(self, history: HistoryModel) -> None:
-        self.collection.add(history.model_dump(exclude_none=True))
+    def save_tarot_reading(self, history: HistoryModel) -> str:
+        """타로 리딩 결과 저장 후 document ID 반환"""
+        _, doc_ref = self.collection.add(history.model_dump(exclude_none=True))
+        return doc_ref.id
     
     def get_history(
         self, 

@@ -165,7 +165,7 @@ Selected Cards:
             raise RuntimeError("Empty response from LLM")
 
         try:
-            self.history_repository.save_tarot_reading(
+            history_id = self.history_repository.save_tarot_reading(
                 HistoryModel(
                     user_id=self.user_id,
                     provider=self.provider,
@@ -177,8 +177,9 @@ Selected Cards:
         except Exception as e:
             logger.error(f"Failed to save history: {e}")
             raise RuntimeError("Failed to save history") from e
-        
+
         return TarotResponse(
             cards=self.cards,
-            result=response.content
+            result=response.content,
+            history_id=history_id
         )

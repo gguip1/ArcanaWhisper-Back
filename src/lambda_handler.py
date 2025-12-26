@@ -57,6 +57,7 @@ from src.services.tarot_service import TarotService
 from src.services.history_service import HistoryService
 from src.services.usage_service import UsageService
 from src.repository.history_repository import HistoryRepository
+from src.repository.reading_repository import ReadingRepository
 from src.schema.tarot import TarotCards
 
 # ============================================================
@@ -139,6 +140,11 @@ def handler(event, _context):
         return handle_tarot_history(event)
     elif path == "/usage" and http_method == "GET":
         return handle_usage(event)
+    elif path == "/readings" and http_method == "POST":
+        return handle_create_share(event)
+    elif path.startswith("/readings/") and http_method == "GET":
+        share_id = path.split("/readings/")[1]
+        return handle_get_shared_reading(event, share_id)
     else:
         return error_response(404, f"Not Found: {http_method} {path}")
 
@@ -253,7 +259,8 @@ def handle_tarot_reading(event) -> dict:
                 "cards": result.cards.cards,
                 "reversed": result.cards.reversed
             },
-            "result": result.result
+            "result": result.result,
+            "history_id": result.history_id
         })
 
     except json.JSONDecodeError:
@@ -355,4 +362,67 @@ def handle_usage(event) -> dict:
 
     except Exception as e:
         logger.error(f"Error in handle_usage: {e}", exc_info=True)
+        return error_response(500, "Internal Server Error")
+
+
+def handle_create_share(event) -> dict:
+    """POST /readings - 공유 링크 생성"""
+    try:
+        # 인증 확인 (로그인 또는 Guest)
+        headers = event.get("headers", {})
+        authorization = headers.get("authorization")
+        guest_token = headers.get("x-guest-token")
+
+        if not authorization and not guest_token:
+            return error_response(401, "Authentication required. Provide Authorization or X-Guest-Token header.")
+
+        # Body 파싱
+        body = event.get("body", "{}")
+        if event.get("isBase64Encoded", False):
+            body = base64.b64decode(body).decode("utf-8")
+
+        data = json.loads(body)
+        history_id = data.get("history_id")
+
+        if not history_id:
+            return error_response(400, "history_id is required")
+
+        # 공유 링크 생성
+        reading_repository = ReadingRepository()
+        share_id = reading_repository.create_share(history_id)
+
+        return response(200, {
+            "share_id": share_id
+        })
+
+    except json.JSONDecodeError:
+        return error_response(400, "Invalid JSON body")
+    except Exception as e:
+        logger.error(f"Error in handle_create_share: {e}", exc_info=True)
+        return error_response(500, "Internal Server Error")
+
+
+def handle_get_shared_reading(event, share_id: str) -> dict:
+    """GET /readings/{share_id} - 공유된 리딩 조회 (공개)"""
+    try:
+        reading_repository = ReadingRepository()
+        reading = reading_repository.get_reading_by_share_id(share_id)
+
+        if not reading:
+            return error_response(404, "Reading not found or expired")
+
+        # created_at 직렬화 처리
+        created_at = reading.get("created_at")
+        if hasattr(created_at, "isoformat"):
+            created_at = created_at.isoformat()
+
+        return response(200, {
+            "question": reading["question"],
+            "cards": reading["cards"],
+            "result": reading["result"],
+            "created_at": created_at
+        })
+
+    except Exception as e:
+        logger.error(f"Error in handle_get_shared_reading: {e}", exc_info=True)
         return error_response(500, "Internal Server Error")
