@@ -11,22 +11,24 @@ class HistoryService:
         self.history_repository = history_repository
 
     def get_history(self):
-        models, next_cursor_doc_id = self.history_repository.get_history(
-            user_id=self.user_id, 
+        history_items, next_cursor_doc_id = self.history_repository.get_history(
+            user_id=self.user_id,
             provider=self.provider,
             limit=5,
             cursor_doc_id=self.cursor_doc_id,
         )
-        
+
         items = [
             HistoryItem(
+                history_id=doc_id,
                 question=history.question,
                 cards=history.cards,
                 result=history.result,
-                created_at=history.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
-            ) for history in models
+                created_at=history.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                is_shared=is_shared
+            ) for doc_id, is_shared, history in history_items
         ]
-        
+
         return HistoryResponse(
             history=items,
             next_cursor_doc_id=next_cursor_doc_id

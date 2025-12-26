@@ -19,10 +19,12 @@ class TarotResponse(BaseModel):
     history_id: str = Field(..., description="Firestore document ID for sharing")
 
 class HistoryItem(BaseModel):
+    history_id: str = Field(..., description="Document ID for sharing")
     question: str
     cards: TarotCards = Field(..., example={"cards": [1, 5, 22], "reversed": [False, True, False]})
     result: str
     created_at: str = Field(..., example="2023-10-01T12:00:00Z")
+    is_shared: bool = Field(default=False, description="Whether this reading has been shared")
 
 class HistoryResponse(BaseModel):
     history: List[HistoryItem]

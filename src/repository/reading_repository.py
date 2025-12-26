@@ -37,8 +37,13 @@ class ReadingRepository:
 
         self.readings_collection.document(share_id).set({
             "history_id": history_id,
-            "created_at": now.isoformat(),
-            "expires_at": expires_at.isoformat()
+            "created_at": now,
+            "expires_at": expires_at  # Timestamp (Firestore TTL 지원)
+        })
+
+        # tarot_history에 공유 상태 업데이트
+        self.history_collection.document(history_id).update({
+            "is_shared": True
         })
 
         return share_id
@@ -57,8 +62,8 @@ class ReadingRepository:
 
         share_data = share_doc.to_dict()
 
-        # 2. 만료 체크
-        expires_at = datetime.fromisoformat(share_data["expires_at"])
+        # 2. 만료 체크 (Firestore Timestamp는 datetime으로 변환됨)
+        expires_at = share_data["expires_at"]
         if datetime.now(KST) > expires_at:
             return None
 

@@ -15,13 +15,18 @@ class HistoryRepository:
         return doc_ref.id
     
     def get_history(
-        self, 
-        user_id: str, 
+        self,
+        user_id: str,
         provider: str,
         limit: int = 5,
         cursor_doc_id: Optional[str] = None,
-        ) -> list[HistoryModel]:
-        
+        ) -> tuple[list[tuple[str, bool, HistoryModel]], Optional[str]]:
+        """
+        히스토리 조회
+
+        Returns:
+            tuple: ([(doc_id, is_shared, HistoryModel), ...], next_cursor_doc_id)
+        """
         query = (
             self.collection
             .where(filter=FieldFilter("user_id", "==", user_id))
@@ -29,17 +34,19 @@ class HistoryRepository:
             .order_by("created_at", direction=firestore.Query.DESCENDING)
             .limit(limit)
         )
-        
+
         if cursor_doc_id:
             doc_snapshot = self.collection.document(cursor_doc_id).get()
             if not doc_snapshot.exists:
                 raise ValueError("Invalid cursor document ID.")
             query = query.start_after(doc_snapshot)
-        
-        docs = query.get()
-        history_models = []
-        for doc in docs:
-            data = normalize_history_data(doc.to_dict())
-            history_models.append(HistoryModel(**data))
 
-        return history_models, docs[-1].id if docs else None
+        docs = query.get()
+        history_items = []
+        for doc in docs:
+            data = doc.to_dict()
+            is_shared = data.get("is_shared", False)
+            normalized_data = normalize_history_data(data)
+            history_items.append((doc.id, is_shared, HistoryModel(**normalized_data)))
+
+        return history_items, docs[-1].id if docs else None
