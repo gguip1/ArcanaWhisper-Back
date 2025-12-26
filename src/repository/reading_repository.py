@@ -11,7 +11,6 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 from firebase_admin import firestore
 
-KST = timezone(timedelta(hours=9))
 SHARE_EXPIRY_DAYS = 30
 
 
@@ -32,13 +31,14 @@ class ReadingRepository:
             share_id: UUID 형식의 공유 ID
         """
         share_id = str(uuid.uuid4())
-        now = datetime.now(KST)
+        # UTC datetime 사용 (Firestore가 자동으로 Timestamp로 변환)
+        now = datetime.now(timezone.utc)
         expires_at = now + timedelta(days=SHARE_EXPIRY_DAYS)
 
         self.readings_collection.document(share_id).set({
             "history_id": history_id,
             "created_at": now,
-            "expires_at": expires_at  # Timestamp (Firestore TTL 지원)
+            "expires_at": expires_at
         })
 
         # tarot_history에 공유 상태 업데이트
@@ -62,9 +62,9 @@ class ReadingRepository:
 
         share_data = share_doc.to_dict()
 
-        # 2. 만료 체크 (Firestore Timestamp는 datetime으로 변환됨)
+        # 2. 만료 체크 (Firestore Timestamp는 UTC datetime으로 변환됨)
         expires_at = share_data["expires_at"]
-        if datetime.now(KST) > expires_at:
+        if datetime.now(timezone.utc) > expires_at:
             return None
 
         # 3. history_id로 원본 데이터 조회
