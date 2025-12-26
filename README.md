@@ -84,24 +84,27 @@ ArcanaWhisper Backend는 AI 타로 리딩 서비스의 API 서버입니다. AWS 
 
 ## 주요 기능
 
-| 기능          | 설명                                         |
-| ------------- | -------------------------------------------- |
-| AI 타로 리딩  | Gemini 기반 타로 해석                        |
-| 사용자 인증   | Firebase ID Token 검증 (Google, Apple OAuth) |
-| Rate Limiting | Guest 1회/일, 로그인 사용자 10회/일          |
-| 히스토리      | 로그인 사용자 타로 기록 저장 및 조회         |
-| 사용량 조회   | 일일 사용량 및 리셋 시간 확인                |
+| 기능          | 설명                                      |
+| ------------- | ----------------------------------------- |
+| AI 타로 리딩  | Gemini 기반 타로 해석                     |
+| 사용자 인증   | Firebase ID Token 검증 (Google, Apple)    |
+| Rate Limiting | Guest 1회/일, 로그인 사용자 10회/일       |
+| 히스토리      | 로그인 사용자 타로 기록 저장 및 조회      |
+| 사용량 조회   | 일일 사용량 및 리셋 시간 확인             |
+| 결과 공유     | 카카오톡 등 외부 공유 링크 생성 (30일 만료) |
 
 ---
 
 ## API 엔드포인트
 
-| Method | Endpoint         | Description    | Auth       |
-| ------ | ---------------- | -------------- | ---------- |
-| `GET`  | `/health`        | 헬스 체크      | -          |
-| `POST` | `/tarot`         | 타로 리딩 요청 | Required   |
-| `GET`  | `/usage`         | 사용량 조회    | Required   |
-| `GET`  | `/tarot/history` | 히스토리 조회  | Login Only |
+| Method | Endpoint              | Description      | Auth       |
+| ------ | --------------------- | ---------------- | ---------- |
+| `GET`  | `/health`             | 헬스 체크        | -          |
+| `POST` | `/tarot`              | 타로 리딩 요청   | Required   |
+| `GET`  | `/usage`              | 사용량 조회      | Required   |
+| `GET`  | `/tarot/history`      | 히스토리 조회    | Login Only |
+| `POST` | `/readings`           | 공유 링크 생성   | Required   |
+| `GET`  | `/readings/{share_id}`| 공유 결과 조회   | -          |
 
 ### 인증 방식
 
@@ -128,19 +131,20 @@ X-Guest-Token: <uuid>
 
 ```
 ├── src/
-│   ├── lambda_handler.py       # Lambda 엔트리포인트, 라우팅
-│   ├── services/               # 비즈니스 로직
-│   │   ├── tarot_service.py    # 타로 리딩 서비스
-│   │   ├── history_service.py  # 히스토리 서비스
-│   │   └── usage_service.py    # Rate Limit 서비스
-│   ├── repository/             # 데이터 접근 계층
-│   │   └── history_repository.py
-│   └── schema/                 # Pydantic 모델
+│   ├── lambda_handler.py        # Lambda 엔트리포인트, 라우팅
+│   ├── services/                # 비즈니스 로직
+│   │   ├── tarot_service.py     # 타로 리딩 서비스
+│   │   ├── history_service.py   # 히스토리 서비스
+│   │   └── usage_service.py     # Rate Limit 서비스
+│   ├── repository/              # 데이터 접근 계층
+│   │   ├── history_repository.py
+│   │   └── reading_repository.py # 공유 링크 관리
+│   └── schema/                  # Pydantic 모델
 │       └── tarot.py
 ├── infra/
-│   └── template.yaml           # AWS SAM 템플릿
-├── docs/                       # API 문서
-├── .github/workflows/          # CI/CD
+│   └── template.yaml            # AWS SAM 템플릿
+├── docs/                        # API 문서
+├── .github/workflows/           # CI/CD
 └── requirements.txt
 ```
 
@@ -205,13 +209,20 @@ user_usage/
         └── updated_at: "ISO8601"
 
 tarot_history/
-  └── {auto_id}/
+  └── {history_id}/
         ├── user_id: string
         ├── provider: string
         ├── question: string
         ├── cards: { cards: number[], reversed: boolean[] }
         ├── result: string
-        └── created_at: timestamp
+        ├── created_at: timestamp
+        └── is_shared: boolean        # 공유 여부
+
+readings/
+  └── {share_id}/                     # UUID
+        ├── history_id: string        # tarot_history 참조
+        ├── created_at: timestamp
+        └── expires_at: timestamp     # 30일 후 만료 (TTL)
 ```
 
 ---
