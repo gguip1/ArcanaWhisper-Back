@@ -303,13 +303,15 @@ def handle_tarot_history(event) -> dict:
         # 응답 직렬화
         history_items = [
             {
+                "history_id": item.history_id,
                 "question": item.question,
                 "cards": {
                     "cards": item.cards.cards,
                     "reversed": item.cards.reversed
                 },
                 "result": item.result,
-                "created_at": item.created_at
+                "created_at": item.created_at,
+                "is_shared": item.is_shared
             }
             for item in result.history
         ]
