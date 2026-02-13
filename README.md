@@ -51,9 +51,7 @@ ArcanaWhisper Backend는 AI 타로 리딩 서비스의 API 서버입니다. AWS 
   스타일: 다크 테마, 미니멀, 화살표로 데이터 흐름 표시
 -->
 
-<p align="center">
-  <img src="assets/readme/architecture.png" width="700" alt="Architecture Diagram">
-</p>
+<img width="2182" height="1224" alt="image" src="https://github.com/user-attachments/assets/e8886712-90f8-4e5b-a6b9-c3c3fa95eb2f" />
 
 ---
 
