@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.aitarot.site">Service</a> •  
+  <a href="https://tarotnow.cloud">Service</a> •  
   <a href="https://github.com/gguip1/ArcanaWhisper-Front">Frontend Repo</a>
 </p>
 
