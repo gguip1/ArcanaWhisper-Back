@@ -35,7 +35,7 @@ Parameters:
     Default: "/arcana-whisper/tarot-cards"
   AllowedOrigins:
     Type: String
-    Default: "https://aitarot.site,https://www.aitarot.site"
+    Default: "https://tarotnow.cloud"
     Description: Allowed CORS origins (comma separated)
 
 Resources:
@@ -124,9 +124,7 @@ Resources:
     Properties:
       StageName: $default
       CorsConfiguration:
-        AllowOrigins:
-          - "https://aitarot.site"
-          - "https://www.aitarot.site"
+        AllowOrigins: !Split [",", !Ref AllowedOrigins]
         AllowHeaders:
           - Content-Type
           - Authorization
