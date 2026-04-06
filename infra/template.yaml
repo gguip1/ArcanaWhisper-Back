@@ -33,10 +33,6 @@ Parameters:
     Type: String
     Description: SSM Parameter Store path for Tarot cards data
     Default: "/arcana-whisper/tarot-cards"
-  AllowedOrigins:
-    Type: String
-    Default: "https://tarotnow.cloud"
-    Description: Allowed CORS origins (comma separated)
 
 Resources:
   # Lambda Function
@@ -124,7 +120,8 @@ Resources:
     Properties:
       StageName: $default
       CorsConfiguration:
-        AllowOrigins: !Split [",", !Ref AllowedOrigins]
+        AllowOrigins:
+          - https://tarotnow.cloud
         AllowHeaders:
           - Content-Type
           - Authorization
