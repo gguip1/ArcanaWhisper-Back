@@ -94,7 +94,7 @@ def detect_injection_attempt(text: str) -> bool:
     return False
 
 LLM = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash-lite",
+            model="gemini-2.5-flash-lite",
             temperature=0.5,
             api_key=get_api_key('GEMINI_API_KEY'),
         )
